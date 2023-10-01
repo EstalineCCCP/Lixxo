@@ -1,6 +1,6 @@
 use std::{
     env, 
-    fs::{rename/*, File, Write*/, create_dir_all}, 
+    fs::{copy, remove_file/*rename, File, Write*/, create_dir_all}, 
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -50,11 +50,16 @@ fn main() {
             dest_file.push(&new_filename);
         }
 
-        match rename(&source_file, &dest_file) {
-            Ok(_) => println!("Moved {} to {}", 
+        match copy(&source_file, &dest_file) {
+            Ok(_) => { println!("Movido {} para {}", 
                             source_file.to_string_lossy(), 
-                            dest_file.to_string_lossy()),
-            Err(err) => eprintln!("Error moving {}: {}", 
+                            dest_file.to_string_lossy());
+                       match remove_file(&source_file) {
+                            Ok(_) => println!("{} removido com sucesso.", &source_file.to_string_lossy()),
+                            Err(err) => eprintln!("Erro ao remover {}\n{}", &source_file.to_string_lossy(), err) 
+                       }
+            },
+            Err(err) => eprintln!("Erro ao mover {}: {}", 
                             source_file.to_string_lossy(), 
                             err),
         }
