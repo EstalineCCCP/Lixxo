@@ -6,14 +6,14 @@ Usar apenas uma variável `LIXEIRA` exportada globalmente ou pelo user para arma
 $ export LIXEIRA=/caminho/para/sua/lixeira
 ```
 ## TODO
-[x] - Operar sobre diretório e arquivo;
-[x] - Renomear duplicatas com datas;
-[ ] - Limpeza automática por data ou comando;
-[ ] - Aviso de tamanho do uso em diretório lixo;
-[ ] - Handle de erro para dispositivo cheio;
-[ ] - Definidor interno de LIXEIRA;
-[ ] - Modo helper;
-[ ] - Modo verboso.
+- [x] Operar sobre diretório e arquivo;
+- [x] Renomear duplicatas com datas;
+- [ ] Limpeza automática por data ou comando;
+- [ ] Aviso de tamanho do uso em diretório lixo;
+- [ ] Handle de erro para dispositivo cheio;
+- [ ] Definidor interno de LIXEIRA;
+- [ ] Modo helper;
+- [ ] Modo verboso.
 ## Licença
 Uso livre.
 Jefferson T. @ 2023
