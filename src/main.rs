@@ -1,8 +1,16 @@
-use std::{
-    env, 
-    fs::{copy, remove_file/*rename, File, Write*/, create_dir_all}, 
-    path::{Path, PathBuf},
-    time::{SystemTime, UNIX_EPOCH},
+use {
+    std::{
+        env, 
+        fs::{copy, 
+            remove_file,
+            create_dir_all,
+            remove_dir_all
+        }, 
+        path::{Path, PathBuf},
+        // EXPERIMENTO: usando chrono
+        // por ser muito mais simples
+        /*time::{SystemTime, UNIX_EPOCH}*/},
+    chrono::offset::Local
 };
 
 fn main() {
@@ -38,30 +46,61 @@ fn main() {
         dest_file.push(&source_filename);
 
         while dest_file.exists() {
-            let timestamp = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .expect("Time went backwards")
-                .as_secs();
-            let timestamp_str = format!("{}", timestamp);
+            // EXPERIMENTO: usando chrono
+            //let date = SystemTime::now()
+            //    .duration_since(UNIX_EPOCH)
+            //    .expect("Time went backwards")
+            //    .as_secs();
+            let date_str = format!("{}", 
+                           Local::now().format("%Y-%m-%d-%Hh%Mm%Ss"));
             let mut new_filename = source_filename.to_os_string();
             new_filename.push("_");
-            new_filename.push(&timestamp_str);
+            new_filename.push(&date_str);
             dest_file = PathBuf::from(&dest_dir);
             dest_file.push(&new_filename);
         }
+      
+        if source_file.is_dir() {
+            match create_dir_all(&dest_file) {
+                Ok(_) => {
+                    match remove_dir_all(&source_file) {
+                        Err(err) => eprintln!("{}", err),
+                        _ => eprintln!(r#"Impossível remover {}"#, 
+                             &source_file.to_string_lossy())
+                    };
+                },
+                Err(err) => {
+                    eprintln!(r#"Não foi possível criar o diretório {}.
+                    \n.{}"#,
+                    &dest_file.to_string_lossy(),
+                    err)}
+            }
 
-        match copy(&source_file, &dest_file) {
-            Ok(_) => { println!("Movido {} para {}", 
-                            source_file.to_string_lossy(), 
-                            dest_file.to_string_lossy());
-                       match remove_file(&source_file) {
-                            Ok(_) => println!("{} removido com sucesso.", &source_file.to_string_lossy()),
-                            Err(err) => eprintln!("Erro ao remover {}\n{}", &source_file.to_string_lossy(), err) 
-                       }
-            },
-            Err(err) => eprintln!("Erro ao mover {}: {}", 
+        } else if source_file.is_file() {
+            match copy(&source_file, &dest_file) {
+                Ok(_) => { 
+                    // TODO: modo verboso
+                    //println!("Movido {} para {}", 
+                    //        source_file.to_string_lossy(), 
+                    //        dest_file.to_string_lossy());
+                    match remove_file(&source_file) {
+                           Ok(_) => {},
+                               // TODO: modo verboso
+                               //println!("{} removido com sucesso.", 
+                               //&source_file.to_string_lossy()),
+                                Err(err) => eprintln!(
+                                        "Erro ao remover {}\n{}", 
+                                        &source_file.to_string_lossy(), 
+                                        err) 
+                    }
+                },
+                Err(err) => eprintln!("Erro ao mover {}: {}", 
                             source_file.to_string_lossy(), 
                             err),
+            }
         }
+        else { eprintln!(r#"Não foi possível determinar se {:?} é 
+               um arquivo ou diretório."#, 
+               &source_file.to_string_lossy())}
     }
 }
