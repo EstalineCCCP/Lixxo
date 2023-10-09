@@ -64,10 +64,11 @@ fn main() {
             match create_dir_all(&dest_file) {
                 Ok(_) => {
                     match remove_dir_all(&source_file) {
-                        Err(err) => eprintln!("{}", err),
-                        _ => eprintln!(r#"Impossível remover {}"#, 
-                             &source_file.to_string_lossy())
-                    };
+                        Err(err) => eprintln!("Impossível remover {}.\n{}",
+                             &source_file.to_string_lossy(),
+                             err),
+                        _ => {}
+                    }
                 },
                 Err(err) => {
                     eprintln!(r#"Não foi possível criar o diretório {}.
@@ -75,7 +76,6 @@ fn main() {
                     &dest_file.to_string_lossy(),
                     err)}
             }
-
         } else if source_file.is_file() {
             match copy(&source_file, &dest_file) {
                 Ok(_) => { 
