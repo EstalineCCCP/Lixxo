@@ -1,10 +1,12 @@
 use {
     std::{
+        io::Result,
         env, 
         fs::{copy, 
             remove_file,
             create_dir_all,
-            remove_dir_all
+            remove_dir_all,
+            rename
         }, 
         path::{Path, PathBuf},
         // EXPERIMENTO: usando chrono
@@ -13,7 +15,29 @@ use {
     chrono::offset::Local
 };
 
-fn main() {
+fn move_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+    if src.is_dir() {
+        create_dir_all(dst)?;
+
+        for entry in src.read_dir()? {
+            let entry = entry?;
+            let src_path = entry.path();
+            let dst_path = dst.join(entry.file_name());
+            if src_path.is_dir() {
+                move_dir_recursive(&src_path, &dst_path)?;
+            } else {
+                rename(&src_path, &dst_path)?;
+            }
+        }
+    } else {
+        rename(src, dst)?;
+    }
+
+    remove_dir_all(src)?;
+    Ok(())
+}
+
+fn main() -> Result<()> {
     let files: Vec<String> = env::args().collect();
     if files.len() < 2 {
         eprintln!("Uso: {} <file1> <file2> ...", files[0]);
@@ -62,13 +86,14 @@ fn main() {
       
         if source_file.is_dir() {
             match create_dir_all(&dest_file) {
-                Ok(_) => {
-                    match remove_dir_all(&source_file) {
-                        Err(err) => eprintln!("Impossível remover {}.\n{}",
-                             &source_file.to_string_lossy(),
-                             err),
-                        _ => {}
-                    }
+                Ok(_) => { move_dir_recursive(&source_file, &dest_file)?
+                    // falta mover o conteúdo!
+                    //match remove_dir_all(&source_file) {
+                    //    Err(err) => eprintln!("Impossível remover {}.\n{}",
+                    //         &source_file.to_string_lossy(),
+                    //         err),
+                    //    _ => {}
+                    //}
                 },
                 Err(err) => {
                     eprintln!(r#"Não foi possível criar o diretório {}.
@@ -103,4 +128,6 @@ fn main() {
                um arquivo ou diretório."#, 
                &source_file.to_string_lossy())}
     }
+
+Ok(())
 }
